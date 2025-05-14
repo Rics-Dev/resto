@@ -1,11 +1,20 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Platform } from 'react-native';
 
-// backend URL
-const API_URL = 'http://localhost:3000/api';
+
+const getBaseUrl = () => {
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:3000/api';
+  } else if (Platform.OS === 'ios') {
+    return 'http://localhost:3000/api';
+  } else {
+    return 'http://192.168.1.X:3000/api'; // computer's IP address
+  }
+};
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -21,6 +30,23 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle common errors and provide better messages
+    if (!error.response) {
+      console.error('Network Error:', error);
+      // Could be a connection issue or CORS problem
+      return Promise.reject({
+        ...error,
+        message: 'Network error - please check your internet connection or server status'
+      });
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Authentication services
