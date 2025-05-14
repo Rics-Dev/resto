@@ -1,5 +1,5 @@
-// screens/MenuScreen.js
-import React, { useState } from 'react';
+// Screens/MenuScreen.js
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -18,87 +18,131 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import DraggableSidebar from '../components/DraggableSidebar';
 import { useSidebar } from '../context/SidebarContext';
 import * as ImagePicker from 'expo-image-picker';
+import { menuService } from '../utils/api';
+import { AuthContext } from '../context/AuthContext';
 
 const MenuScreen = ({ navigation }) => {
-  const { sidebarWidth } = useSidebar();
-  const [menuItems, setMenuItems] = useState([
-    { 
-      id: '1', 
-      name: 'Pizza', 
-      category: 'Main', 
-      price: '3000da', 
-      rating: 4.8,
-      dateAdded: '4/13/2025',
-      description: 'Classic pizza with tomato sauce, mozzarella, and fresh basil',
-      calories: 850,
-      orders: 50,
-      ingredients: [
-        { name: 'Tomatoes', quantity: '200g' },
-        { name: 'Mozzarella Cheese', quantity: '150g' },
-        { name: 'Basil', quantity: '10g' },
-        { name: 'Flour', quantity: '300g' },
-        { name: 'Olive Oil', quantity: '30ml' }
-      ],
-      healthAlerts: ['Contains gluten', 'Contains dairy'],
-      image: 'https://placeholder.svg?height=300&width=300&query=pizza',
-    },
-    { 
-      id: '2', 
-      name: 'Cheese Plate', 
-      category: 'Appetizer', 
-      price: '2000da', 
-      rating: 4.5,
-      dateAdded: '4/13/2025',
-      description: 'Delicious cheese dish with assorted cheeses',
-      calories: 650,
-      orders: 35,
-      ingredients: [
-        { name: 'Cheese', quantity: '250g' },
-        { name: 'Tomatoes', quantity: '100g' },
-        { name: 'Herbs', quantity: '5g' }
-      ],
-      healthAlerts: ['Contains dairy'],
-      image: 'https://placeholder.svg?height=300&width=300&query=cheese%20plate',
-    },
-    { 
-      id: '3', 
-      name: 'Pasta', 
-      category: 'Main', 
-      price: '1500da', 
-      rating: 4.3,
-      dateAdded: '4/13/2025',
-      description: 'Pasta with tomato sauce and fresh herbs',
-      calories: 550,
-      orders: 40,
-      ingredients: [
-        { name: 'Pasta', quantity: '200g' },
-        { name: 'Tomatoes', quantity: '150g' },
-        { name: 'Herbs', quantity: '5g' },
-        { name: 'Olive Oil', quantity: '15ml' }
-      ],
-      healthAlerts: ['Contains gluten'],
-      image: 'https://placeholder.svg?height=300&width=300&query=pasta',
-    },
-    { 
-      id: '4', 
-      name: 'Fresh Salad', 
-      category: 'Side', 
-      price: '1000da', 
-      rating: 4.0,
-      dateAdded: '4/13/2025',
-      description: 'Fresh garden salad with seasonal vegetables',
-      calories: 45,
-      orders: 30,
-      ingredients: [
-        { name: 'Tomatoes', quantity: '100g' },
-        { name: 'Lettuce', quantity: '150g' },
-        { name: 'Cucumber', quantity: '100g' },
-        { name: 'Olive Oil', quantity: '10ml' }
-      ],
-      healthAlerts: [],
-      image: 'https://placeholder.svg?height=300&width=300&query=salad',
-    },
-  ]);
+  // const { sidebarWidth } = useSidebar();
+    const { sidebarWidth } = useSidebar();
+  const { userData } = useContext(AuthContext);
+  const [menuItems, setMenuItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+
+
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
+
+   const fetchMenuItems = async () => {
+    setIsLoading(true);
+    try {
+      const response = await menuService.getAllItems();
+      if (response.data && response.data.data) {
+        setMenuItems(response.data.data.platsDispo || []);
+      }
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      Alert.alert('Error', 'Failed to load menu items');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+    const addToFavorites = async (plateId) => {
+    if (!userData) {
+      Alert.alert('Authentication Required', 'Please login to add favorites');
+      return;
+    }
+    
+    try {
+      await menuService.addToFavorites(plateId, userData.id_client);
+      Alert.alert('Success', 'Added to favorites');
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+      Alert.alert('Error', 'Failed to add to favorites');
+    }
+  };
+
+
+  // const [menuItems, setMenuItems] = useState([
+  //   { 
+  //     id: '1', 
+  //     name: 'Pizza', 
+  //     category: 'Main', 
+  //     price: '3000da', 
+  //     rating: 4.8,
+  //     dateAdded: '4/13/2025',
+  //     description: 'Classic pizza with tomato sauce, mozzarella, and fresh basil',
+  //     calories: 850,
+  //     orders: 50,
+  //     ingredients: [
+  //       { name: 'Tomatoes', quantity: '200g' },
+  //       { name: 'Mozzarella Cheese', quantity: '150g' },
+  //       { name: 'Basil', quantity: '10g' },
+  //       { name: 'Flour', quantity: '300g' },
+  //       { name: 'Olive Oil', quantity: '30ml' }
+  //     ],
+  //     healthAlerts: ['Contains gluten', 'Contains dairy'],
+  //     image: 'https://placeholder.svg?height=300&width=300&query=pizza',
+  //   },
+  //   { 
+  //     id: '2', 
+  //     name: 'Cheese Plate', 
+  //     category: 'Appetizer', 
+  //     price: '2000da', 
+  //     rating: 4.5,
+  //     dateAdded: '4/13/2025',
+  //     description: 'Delicious cheese dish with assorted cheeses',
+  //     calories: 650,
+  //     orders: 35,
+  //     ingredients: [
+  //       { name: 'Cheese', quantity: '250g' },
+  //       { name: 'Tomatoes', quantity: '100g' },
+  //       { name: 'Herbs', quantity: '5g' }
+  //     ],
+  //     healthAlerts: ['Contains dairy'],
+  //     image: 'https://placeholder.svg?height=300&width=300&query=cheese%20plate',
+  //   },
+  //   { 
+  //     id: '3', 
+  //     name: 'Pasta', 
+  //     category: 'Main', 
+  //     price: '1500da', 
+  //     rating: 4.3,
+  //     dateAdded: '4/13/2025',
+  //     description: 'Pasta with tomato sauce and fresh herbs',
+  //     calories: 550,
+  //     orders: 40,
+  //     ingredients: [
+  //       { name: 'Pasta', quantity: '200g' },
+  //       { name: 'Tomatoes', quantity: '150g' },
+  //       { name: 'Herbs', quantity: '5g' },
+  //       { name: 'Olive Oil', quantity: '15ml' }
+  //     ],
+  //     healthAlerts: ['Contains gluten'],
+  //     image: 'https://placeholder.svg?height=300&width=300&query=pasta',
+  //   },
+  //   { 
+  //     id: '4', 
+  //     name: 'Fresh Salad', 
+  //     category: 'Side', 
+  //     price: '1000da', 
+  //     rating: 4.0,
+  //     dateAdded: '4/13/2025',
+  //     description: 'Fresh garden salad with seasonal vegetables',
+  //     calories: 45,
+  //     orders: 30,
+  //     ingredients: [
+  //       { name: 'Tomatoes', quantity: '100g' },
+  //       { name: 'Lettuce', quantity: '150g' },
+  //       { name: 'Cucumber', quantity: '100g' },
+  //       { name: 'Olive Oil', quantity: '10ml' }
+  //     ],
+  //     healthAlerts: [],
+  //     image: 'https://placeholder.svg?height=300&width=300&query=salad',
+  //   },
+  // ]);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [showDetails, setShowDetails] = useState(false);
@@ -107,6 +151,7 @@ const MenuScreen = ({ navigation }) => {
   const [showUpdatePriceModal, setShowUpdatePriceModal] = useState(false);
   const [newPrice, setNewPrice] = useState('');
   const [showAddPlateModal, setShowAddPlateModal] = useState(false);
+
   
   // Add Plate Form State
   const [newPlate, setNewPlate] = useState({
@@ -251,19 +296,19 @@ const MenuScreen = ({ navigation }) => {
       onPress={() => handleViewDetails(item)}
     >
       <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.name}</Text>
+        <Text style={styles.itemName}>{item.nom_plat}</Text>
       </View>
       <View style={styles.categoryContainer}>
-        <Text style={styles.categoryText}>{item.category}</Text>
+        <Text style={styles.categoryText}>{item.categorie_plat}</Text>
       </View>
       <View style={styles.priceContainer}>
-        <Text style={styles.priceText}>{item.price}</Text>
+        <Text style={styles.priceText}>{item.Prix_plat}DA</Text>
       </View>
       <View style={styles.ratingContainer}>
-        <Text style={styles.ratingText}>{item.rating ? item.rating.toFixed(1) : ''}</Text>
+        <Text style={styles.ratingText}>{item.note_plat?.toFixed(1) || '-'}</Text>
       </View>
       <View style={styles.dateContainer}>
-        <Text style={styles.dateText}>{item.dateAdded}</Text>
+        <Text style={styles.dateText}>{item.Ajout_date}</Text>
       </View>
       <View style={styles.actionButtons}>
         <TouchableOpacity 
@@ -274,19 +319,56 @@ const MenuScreen = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.actionButton} 
-          onPress={() => handleEdit(item)}
+          onPress={() => addToFavorites(item.id_plat)}
         >
-          <Feather name="edit" size={20} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => handleDelete(item)}
-        >
-          <Feather name="trash-2" size={20} color="#000" />
+          <Feather name="heart" size={20} color="#000" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
+
+  // const renderItem = ({ item }) => (
+  //   <TouchableOpacity 
+  //     style={styles.menuItemRow}
+  //     onPress={() => handleViewDetails(item)}
+  //   >
+  //     <View style={styles.itemInfo}>
+  //       <Text style={styles.itemName}>{item.name}</Text>
+  //     </View>
+  //     <View style={styles.categoryContainer}>
+  //       <Text style={styles.categoryText}>{item.category}</Text>
+  //     </View>
+  //     <View style={styles.priceContainer}>
+  //       <Text style={styles.priceText}>{item.price}</Text>
+  //     </View>
+  //     <View style={styles.ratingContainer}>
+  //       <Text style={styles.ratingText}>{item.rating ? item.rating.toFixed(1) : ''}</Text>
+  //     </View>
+  //     <View style={styles.dateContainer}>
+  //       <Text style={styles.dateText}>{item.dateAdded}</Text>
+  //     </View>
+  //     <View style={styles.actionButtons}>
+  //       <TouchableOpacity 
+  //         style={styles.actionButton} 
+  //         onPress={() => handleViewDetails(item)}
+  //       >
+  //         <Feather name="eye" size={20} color="#000" />
+  //       </TouchableOpacity>
+  //       <TouchableOpacity 
+  //         style={styles.actionButton} 
+  //         onPress={() => handleEdit(item)}
+  //       >
+  //         <Feather name="edit" size={20} color="#000" />
+  //       </TouchableOpacity>
+  //       <TouchableOpacity 
+  //         style={styles.actionButton} 
+  //         onPress={() => handleDelete(item)}
+  //       >
+  //         <Feather name="trash-2" size={20} color="#000" />
+  //       </TouchableOpacity>
+  //     </View>
+  //   </TouchableOpacity>
+  // );
 
   return (
     <SafeAreaView style={styles.container}>
