@@ -51,6 +51,7 @@ const RegisterScreen = ({ navigation }) => {
         [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
     } catch (error) {
+      console.log(error)
       Alert.alert(
         'Registration Failed',
         error.response?.data?.message || 'An error occurred during registration'

@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SidebarProvider } from './context/SidebarContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
-import { requestUserPermission, setupFCMListeners, registerFCMToken } from './utils/NotificationService';
+// import { requestUserPermission, setupFCMListeners, registerFCMToken } from './utils/NotificationService';
 
 // Import screens
 import LoginScreen from './Screens/LoginScreen';
@@ -61,28 +61,28 @@ const App = () => {
 const RootNavigator = () => {
   const { userToken, isLoading, userData, userRole } = React.useContext(AuthContext);
   
-  useEffect(() => {
-    const setupNotifications = async () => {
-      const hasPermission = await requestUserPermission();
-      if (hasPermission && userData?.id) {
-        await registerFCMToken(userData.id, userRole);
-      }
-    };
-    
-    if (userData) {
-      setupNotifications();
-    }
-  }, [userData, userRole]);
+  // useEffect(() => {
+  //   const setupNotifications = async () => {
+  //     const hasPermission = await requestUserPermission();
+  //     if (hasPermission && userData?.id) {
+  //       await registerFCMToken(userData.id, userRole);
+  //     }
+  //   };
+  //
+  //   if (userData) {
+  //     setupNotifications();
+  //   }
+  // }, [userData, userRole]);
   
-  useEffect(() => {
-    if (userData) {
-      const unsubscribe = setupFCMListeners(navigation);
-      return unsubscribe;
-    }
-  }, [userData]);
+  // useEffect(() => {
+  //   if (userData) {
+  //     const unsubscribe = setupFCMListeners(navigation);
+  //     return unsubscribe;
+  //   }
+  // }, [userData]);
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoginScreen />;
   }
 
   return userToken ? <AppStack /> : <AuthStack />;
